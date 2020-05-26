@@ -1,9 +1,9 @@
 /* global twemoji, alert, MouseEvent, game */
-const numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
+const numbers = ['1', '2', '3', '4', '5', '6', '7', '8']
 const iDevise = navigator.platform.match(/^iP/)
 const feedback = document.querySelector('.feedback')
 
-var Game = function (cols, rows, number_of_bombs, set, usetwemoji) {
+var Game = function (cols, rows, number_of_bombs, set) {
   this.number_of_cells = cols * rows
   this.map = document.getElementById('map')
   this.cols = Number(cols)
@@ -13,7 +13,7 @@ var Game = function (cols, rows, number_of_bombs, set, usetwemoji) {
 
   this.emojiset = set
   this.numbermoji = [this.emojiset[0]].concat(numbers)
-  this.usetwemoji = usetwemoji || false
+  this.usetwemoji = false
 
   this.init()
 }
@@ -31,11 +31,18 @@ Game.prototype.init = function () {
   function getIndex (x, y) {
     if (x > that.cols || x <= 0) return -1
     if (y > that.cols || y <= 0) return -1
-    return that.cols * (y - 1 ) + x - 1
+    return that.cols * (y - 1) + x - 1
+  }
+
+  function isNeighbor (x1y1, x2y2) {
+    return Math.abs(x1y1[0] - x2y2[0]) <= 1 && Math.abs(x1y1[1] - x2y2[1]) <= 1
   }
 
   var row = document.createElement('div')
   row.setAttribute('role', 'row')
+
+  var empties = []
+  var EXPECTED_EMPTIES_LEN = Math.ceil(Math.sqrt(grid_data.length) / 6)
   grid_data.forEach(function (isBomb, i) {
     var cell = document.createElement('span')
     cell.setAttribute('role', 'gridcell')
@@ -45,6 +52,16 @@ Game.prototype.init = function () {
     var neighbors_cords = [[x, y - 1], [x, y + 1], [x - 1, y - 1], [x - 1, y], [x - 1, y + 1], [x + 1, y - 1], [x + 1, y], [x + 1, y + 1]]
     if(!isBomb) {
       var neighbors = neighbors_cords.map(function (xy) { return grid_data[getIndex(xy[0], xy[1])] })
+      if(!neighbors.some(function (neighbor) { return neighbor !== false })) {
+        if(empties.length === 0 || empties.some(function (xy) {
+          return isNeighbor(xy, [x, y])
+        })) {
+          if(empties.length < EXPECTED_EMPTIES_LEN) {
+            mine.innerText = ' '
+            empties.push([x, y])
+          }
+        }
+      }
       mine.mine_count = neighbors.filter(function (neighbor_bomb) { return neighbor_bomb }).length
     }
     mine.classList.add('x' + x, 'y' + y)
@@ -58,6 +75,10 @@ Game.prototype.init = function () {
       row.setAttribute('role', 'row')
     }
   })
+
+  if(empties.length < EXPECTED_EMPTIES_LEN) {
+    this.restart()
+  }
 
   this.resetMetadata()
   this.bindEvents()
@@ -110,11 +131,13 @@ Game.prototype.bindEvents = function () {
       if (!target.isMasked) { return }
       if (target.isFlagged) {
         target.setAttribute('aria-label','Field')
+        target.classList.remove('potential-bomb')
         that.updateFeedback('Unflagged as potential bomb')
         emoji = that.emojiset[3].cloneNode()
         target.isFlagged = false
       } else {
         target.setAttribute('aria-label', 'Flagged as potential bomb')
+        target.classList.add('potential-bomb')
         that.updateFeedback('Flagged as potential bomb')
         emoji = that.emojiset[2].cloneNode()
         target.isFlagged = true
@@ -166,11 +189,11 @@ Game.prototype.game = function () {
   }
 }
 
-Game.prototype.restart = function (usetwemoji) {
+Game.prototype.restart = function () {
   clearInterval(this.timer)
   this.result = false
   this.timer = false
-  this.usetwemoji = usetwemoji
+  this.usetwemoji = false
   this.init()
 }
 
@@ -196,7 +219,8 @@ Game.prototype.mine = function (bomb) {
   base.type = 'button'
   base.setAttribute('aria-label', 'Field')
   base.className = 'cell'
-  base.appendChild(this.emojiset[3].cloneNode())
+  var emojiNode = this.emojiset[3].cloneNode()
+  base.appendChild(emojiNode)
   base.isMasked = true
   if (bomb) base.isBomb = true
   base.reveal = function (won) {
@@ -207,6 +231,7 @@ Game.prototype.mine = function (bomb) {
     this.appendChild(emoji.cloneNode())
     this.isMasked = false
     this.classList.add('unmasked')
+    this.classList.add('mine' + base.mine_count)
   }
   return base
 }
@@ -227,20 +252,7 @@ Game.prototype.revealNeighbors = function (mine) {
 Game.prototype.prepareEmoji = function () {
   var that = this
   function makeEmojiElement (emoji) {
-    var ele
-    if(that.usetwemoji) {
-      if (emoji.src) {
-        ele = emoji
-      } else {
-        ele = document.createElement('img')
-        ele.className = 'emoji'
-        ele.setAttribute('aria-hidden', 'true')
-        ele.src = twemoji.parse(emoji).match(/src=\"(.+)\">/)[1]
-      }
-    } else {
-      ele = document.createTextNode(emoji.alt || emoji.data || emoji)
-    }
-    return ele
+    return document.createTextNode(emoji.alt || emoji.data || emoji)
   }
 
   this.emojiset = this.emojiset.map(makeEmojiElement)

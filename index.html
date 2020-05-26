@@ -8,6 +8,10 @@
     <link rel="apple-touch-icon" href="icon-192.png" />
 
     <style type="text/css">
+      * {
+        outline: none !important;
+      }
+
       body {
         font-family: AppleColorEmoji;
         font-size: 15px;
@@ -135,13 +139,36 @@
         border: 0;
         display: inline-block;
         position: relative;
-        padding: 2px 3px;
+        padding: 0 2px;
         vertical-align: middle;
         cursor: pointer;
+        padding-bottom: 26px;
+        border-right: 1px solid grey;
+        border-bottom: 1px solid grey;
+      }
+
+      .empty {
+        opacity: 0;
       }
 
       .unmasked {
         cursor: default;
+      }
+
+      .potential-bomb {
+        background-color: #ffb6b6;
+      }
+
+      .mine1 {
+        color: #08c;
+      }
+
+      .mine2 {
+        color: #1a1;
+      }
+
+      .mine3 {
+        color: crimson;
       }
 
       #map {
@@ -274,18 +301,17 @@
           <label class="btn flex-cell" aria-label="Use Native Emoji"><input type="radio" name="emoji" id="emoji"> Native emoji</label>
         </div>
         <div class="flex">
-          <input id="cols" class="input flex-cell" type="number" value="10" min="1" max="500" aria-label="Columns">
+          <input id="cols" class="input flex-cell" type="number" value="30" min="1" max="500" aria-label="Columns">
           <div class="flex-cell divider">&times;</div>
-          <input id="rows" class="input flex-cell" type="number" value="10" min="1" max="500" aria-label="Rows"><br>
+          <input id="rows" class="input flex-cell" type="number" value="16" min="1" max="500" aria-label="Rows"><br>
         </div>
         <div class="prepend-input">💣</div>
-        <input id="bombs" class="input" type="number" value="10" min="1" max="2500" aria-label="Number of bombs">
+        <input id="bombs" class="input" type="number" value="99" min="1" max="2500" aria-label="Number of bombs">
         <select id="emojiset" class="input input-select" aria-label="Change emoji set">
-          <option value="🐣 💣 🚧 ◻️">🐣 💣 🚧</option>
-          <option value="🍰 👾 📌 ◻️">🍰 👾 📌</option>
-          <option value="🌷 ⚡️ 🐞 ◻️">🌷 ⚡️ 🐞</option>
-          <option value="⭕️ ❌ ❗️ ✖️️">⭕️ ❌ ❗️ ✖️</option>
-          <option value="☀ ⚡ ☔ ☁️">☀ ⚡ ☔ ☁️</option>
+          <option value=" |💣|🇳🇵|◻️">□ 💣 🚧</option>
+          <option value="□|👾|📌|◻️">□ 👾 📌</option>
+          <option value="🌷|⚡️|🐞|◻️">🌷 ⚡️ 🐞</option>
+          <option value="☀|⚡|☔|☁️">☀ ⚡ ☔ ☁️</option>
         </select>
         <button class="js-popup-new-game btn" type="button">Save and restart game</button>
       </div>
@@ -313,12 +339,12 @@
     <script src="game.js"></script>
 
     <script>
-      var emojiset = document.getElementById('emojiset').value.split(' ')
+      var emojiset = document.getElementById('emojiset').value.split('|')
       var cols = document.getElementById('cols')
       var rows = document.getElementById('rows')
       var bombs = document.getElementById('bombs')
 
-      game = new Game(cols.value, rows.value, bombs.value, emojiset, document.getElementById('twemoji').checked)
+      game = new Game(cols.value, rows.value, bombs.value, emojiset, false)
 
       document.querySelector('.js-new-game').addEventListener('click', restart)
       document.querySelector('.js-popup-new-game').addEventListener('click', restart)
@@ -331,20 +357,11 @@
 
       function restart () {
         clearInterval(game.timer)
-        emojiset = document.getElementById('emojiset').value.split(' ')
+        emojiset = document.getElementById('emojiset').value.split('|')
         game = new Game(cols.value, rows.value, bombs.value, emojiset, document.getElementById('twemoji').checked)
         document.querySelector('.js-settings-popup').classList.remove('show')
         return false
       }
-    </script>
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga')
-
-      ga('create', 'UA-21332781-19', 'auto')
-      ga('send', 'pageview')
     </script>
     <link href="http://fonts.googleapis.com/css?family=Exo+2" rel="stylesheet" type="text/css">
   </body>
